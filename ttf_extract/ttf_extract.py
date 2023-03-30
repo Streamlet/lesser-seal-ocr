@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import os, sys
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
@@ -5,6 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.path import Path
 import matplotlib._color_data as mcd
+
 
 def draw_font(bounds, commands, out_path):
     # SVG d commands:
@@ -63,7 +66,7 @@ def draw_font(bounds, commands, out_path):
             prev = (v[2], v[3])
         elif c == 'q':
             codes.append(Path.CURVE3)
-            verts.append((prev[0] + v[0], prev[1] +  v[1]))
+            verts.append((prev[0] + v[0], prev[1] + v[1]))
             prev = (prev[0] + v[0], prev[1] + v[1])
             codes.append(Path.CURVE3)
             verts.append((prev[0] + v[2], prev[1] + v[3]))
@@ -124,19 +127,23 @@ def draw_font(bounds, commands, out_path):
         else:
             print('Unrecognized command:', command)
     fig, ax = plt.subplots()
-    fig.set_size_inches(1.0/1, 1.0/1)
+    fig.set_size_inches(1.0 / 1, 1.0 / 1)
     ax.set_xlim(bounds[0], bounds[2])
     ax.set_ylim(bounds[1], bounds[3])
     ax.set_aspect(1)
     path = Path(verts, codes)
-    patch = patches.PathPatch(path, facecolor = 'black', edgecolor = 'black', lw=0)
+    patch = patches.PathPatch(path, facecolor='black', edgecolor='black', lw=0)
     ax.add_patch(patch)
     plt.axis('off')
     try:
-        fig.savefig(out_path, format='png')
+        fig.savefig(out_path,
+                    format='png',
+                    transparent=True,
+                    bbox_inches='tight')
     except:
         pass
     plt.close()
+
 
 def parse_font(ttf_path):
     tt = TTFont(ttf_path)
@@ -152,8 +159,12 @@ def parse_font(ttf_path):
         commands = []
         for command in pen._commands:
             commands.append({
-                'code': command[0],
-                'vert': list(map(lambda n: float(n), command[1:].replace(',', '').split(' '))) if command[1:] != '' else [],
+                'code':
+                command[0],
+                'vert':
+                list(
+                    map(lambda n: float(n), command[1:].replace(
+                        ',', '').split(' '))) if command[1:] != '' else [],
             })
         font = {
             'unicode': unicode,
@@ -170,7 +181,9 @@ def main():
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
         for bounds, font in parse_font(ttf_path):
-            draw_font(bounds, font['commands'], os.path.join(out_dir, chr(font['unicode']) + '.png'))
+            draw_font(bounds, font['commands'],
+                      os.path.join(out_dir,
+                                   chr(font['unicode']) + '.png'))
 
 
 if __name__ == '__main__':
