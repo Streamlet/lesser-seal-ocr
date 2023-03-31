@@ -14,7 +14,12 @@ def cv2read(path):
 def load(path):
     images = []
     labels = []
-    for label in os.listdir(path):
+    images_cache_file = os.path.join(path, 'images.cache')
+    labels_cache_file = os.path.join(path, 'labels.cache')
+    if os.path.exists(images_cache_file) and os.path.exists(labels_cache_file):
+        return np.fromfile(images_cache_file), np.fromfile(labels_cache_file)
+    for i, label in enumerate(os.listdir(path)):
+        print('loading [%d]%s ...' % (i, label))
         label_dir = os.path.join(path, label)
         if os.path.isdir(label_dir):
             for file_name in os.listdir(label_dir):
@@ -22,8 +27,12 @@ def load(path):
                     image = cv2read(os.path.join(label_dir, file_name))
                     image_grayed = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
                     images.append(image_grayed)
-                    labels.append(label)
-    return np.array(images), np.array(labels)
+                    labels.append(ord(label))
+    images_np = np.array(images)
+    labels_np = np.array(labels)
+    images_np.tofile(images_cache_file)
+    labels_np.tofile(labels_cache_file)
+    return images_np, labels_np
 
 
 def train(images, labels):
@@ -73,6 +82,7 @@ def main():
         print('usage: fit.py <input_dir>')
         return
     img_path = sys.argv[1]
+
     images, labels = load(img_path)
     train(images, labels)
 

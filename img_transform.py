@@ -21,7 +21,7 @@ def transform(char, source_path, out_dir):
     img = cv2read(source_path)
     # 原图
     cv2save(img, os.path.join(target_dir, 'original.png'))
-    # 旋转 -45 度到 +45 度
+    # 旋转 -30 度到 +30 度
     height, width = img.shape[:2]
     center = (width / 2, height / 2)
     for angle in range(-30, 30):

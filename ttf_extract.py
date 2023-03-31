@@ -6,7 +6,6 @@ from fontTools.pens.svgPathPen import SVGPathPen
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.path import Path
-import matplotlib._color_data as mcd
 
 
 def draw_font(bounds, commands, out_path):
