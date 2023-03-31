@@ -14,10 +14,10 @@ def cv2read(path):
 def load(path):
     images = []
     labels = []
-    images_cache_file = os.path.join(path, 'images.cache')
-    labels_cache_file = os.path.join(path, 'labels.cache')
+    images_cache_file = os.path.join(path, 'images.npy')
+    labels_cache_file = os.path.join(path, 'labels.npy')
     if os.path.exists(images_cache_file) and os.path.exists(labels_cache_file):
-        return np.fromfile(images_cache_file), np.fromfile(labels_cache_file)
+        return np.load(images_cache_file), np.load(labels_cache_file)
     for i, label in enumerate(os.listdir(path)):
         print('loading [%d]%s ...' % (i, label))
         label_dir = os.path.join(path, label)
@@ -25,13 +25,14 @@ def load(path):
             for file_name in os.listdir(label_dir):
                 if file_name.endswith('.png'):
                     image = cv2read(os.path.join(label_dir, file_name))
-                    image_grayed = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+                    image_resized = cv2.resize(image, (100, 100))
+                    image_grayed = cv2.cvtColor(image_resized, cv2.COLOR_RGB2GRAY)
                     images.append(image_grayed)
                     labels.append(ord(label))
     images_np = np.array(images)
     labels_np = np.array(labels)
-    images_np.tofile(images_cache_file)
-    labels_np.tofile(labels_cache_file)
+    np.save(images_cache_file, images_np)
+    np.save(labels_cache_file, labels_np)
     return images_np, labels_np
 
 
@@ -57,7 +58,7 @@ def train(images, labels):
         keras.layers.MaxPool2D((2, 2)),
         keras.layers.Flatten(),
         keras.layers.Dense(128, activation='relu'),
-        keras.layers.Dense(labels.shape1[1], activation='softmax')
+        keras.layers.Dense(labels_one_hot.shape[1], activation='softmax')
     ])
 
     # 编译模型
@@ -76,6 +77,8 @@ def train(images, labels):
     test_loss, test_acc = model.evaluate(X_test, y_test)
     print('Test loss:', test_loss, 'test accuracy:', test_acc)
 
+    return model
+
 
 def main():
     if len(sys.argv) < 1:
@@ -84,7 +87,8 @@ def main():
     img_path = sys.argv[1]
 
     images, labels = load(img_path)
-    train(images, labels)
+    model = train(images, labels)
+    model.save(os.path.join(img_path, 'trained.h5'))
 
 
 if __name__ == '__main__':
