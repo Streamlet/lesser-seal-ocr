@@ -24,11 +24,26 @@ def main():
     image_grayed = cv2.cvtColor(image_resized, cv2.COLOR_RGB2GRAY)
     
     X_test = np.array([image_grayed])
-
     y_test = model.predict(X_test)
-    y_test_classes = np.argmax(y_test, axis=1)
 
-    print(chr(y_test_classes[0]))
+    rates = y_test[0]
+
+    class_0 = np.argmax(rates)
+    rate_0 = rates[class_0]
+    rates = np.delete(rates, class_0)
+
+    class_1 = np.argmax(rates)
+    rate_1 = rates[class_1]
+    rates = np.delete(rates, class_1)
+
+    class_2 = np.argmax(rates)
+    rate_2 = rates[class_2]
+    rates = np.delete(rates, class_2)
+
+    print('1.%s(%.2f%%); 2.%s(%.2f%%); 3.%s(%.2f%%)' % (
+        chr(class_0 + 0x4E00), float(rate_0 * 100),
+        chr(class_1 + 0x4E00), float(rate_1 * 100),
+        chr(class_2 + 0x4E00), float(rate_2 * 100)))
 
 
 if __name__ == '__main__':

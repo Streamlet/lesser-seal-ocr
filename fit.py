@@ -38,7 +38,7 @@ def load(path):
 
 def train(images, labels):
     # 将标签进行 one-hot 编码
-    labels_one_hot = tf.keras.utils.to_categorical(labels)
+    labels_one_hot = tf.keras.utils.to_categorical(labels  - 0x4E00)
 
     # 划分训练集和测试集
     X_train, X_test, y_train, y_test = train_test_split(images,
