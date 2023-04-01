@@ -6,6 +6,7 @@ from fontTools.pens.svgPathPen import SVGPathPen
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.path import Path
+import numpy as np
 
 
 def draw_font(bounds, commands, out_path):
@@ -127,8 +128,15 @@ def draw_font(bounds, commands, out_path):
             print('Unrecognized command:', command)
     fig, ax = plt.subplots()
     fig.set_size_inches(1.0 / 1, 1.0 / 1)
-    ax.set_xlim(bounds[0], bounds[2])
-    ax.set_ylim(bounds[1], bounds[3])
+    verts_np = np.array(verts)
+    content_width = content_height = np.max(
+        np.max(verts_np, axis=0) - np.min(verts_np, axis=0))
+    bound_width = bounds[2] - bounds[0]
+    bound_height = bounds[3] - bounds[1]
+    delta_width = (bound_width - content_width)
+    delta_height = (bound_height - content_height)
+    ax.set_xlim(bounds[0] + delta_width / 3, bounds[2] - delta_width / 4)
+    ax.set_ylim(bounds[1] + delta_height / 2, bounds[3] - delta_height / 6)
     ax.set_aspect(1)
     path = Path(verts, codes)
     patch = patches.PathPatch(path, facecolor='black', edgecolor='black', lw=0)
@@ -138,7 +146,8 @@ def draw_font(bounds, commands, out_path):
         fig.savefig(out_path,
                     format='png',
                     transparent=True,
-                    bbox_inches='tight')
+                    bbox_inches='tight',
+                    pad_inches=0)
     except:
         pass
     plt.close()
@@ -173,13 +182,19 @@ def parse_font(ttf_path):
 
 
 def main():
+    if len(sys.argv) <= 1:
+        print('Usage: ttf_extract.py <ttf_path>')
+
     for i in range(1, len(sys.argv)):
         ttf_path = sys.argv[i]
-        print('Extracting ' + ttf_path + '...')
+        print('Extracting %s...' % ttf_path)
         out_dir = os.path.splitext(ttf_path)[0]
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
         for bounds, font in parse_font(ttf_path):
+            if font['unicode'] < 0x4E00 or font['unicode'] > 0x9FFF:
+                continue
+            print('Drawing %s...' % chr(font['unicode']))
             draw_font(bounds, font['commands'],
                       os.path.join(out_dir,
                                    chr(font['unicode']) + '.png'))
