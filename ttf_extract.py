@@ -185,19 +185,18 @@ def main():
     if len(sys.argv) <= 1:
         print('Usage: ttf_extract.py <ttf_path>')
 
-    for i in range(1, len(sys.argv)):
-        ttf_path = sys.argv[i]
-        print('Extracting %s...' % ttf_path)
-        out_dir = os.path.splitext(ttf_path)[0]
-        if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
-        for bounds, font in parse_font(ttf_path):
-            if font['unicode'] < 0x4E00 or font['unicode'] > 0x9FFF:
-                continue
-            print('Drawing %s...' % chr(font['unicode']))
-            draw_font(bounds, font['commands'],
-                      os.path.join(out_dir,
-                                   chr(font['unicode']) + '.png'))
+    ttf_path = sys.argv[1]
+    print('Extracting %s...' % ttf_path)
+    out_dir = os.path.splitext(ttf_path)[0]
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    for bounds, font in parse_font(ttf_path):
+        if font['unicode'] < 0x4E00 or font['unicode'] > 0x9FFF:
+            continue
+        print('Drawing %s...' % chr(font['unicode']))
+        draw_font(bounds, font['commands'],
+                  os.path.join(out_dir,
+                               chr(font['unicode']) + '.png'))
 
 
 if __name__ == '__main__':

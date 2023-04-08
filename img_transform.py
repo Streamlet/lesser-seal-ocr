@@ -1,6 +1,7 @@
 # coding: utf-8
 
-import os, sys
+import os
+import sys
 import cv2
 import numpy as np
 
@@ -20,8 +21,7 @@ def save(img, target_dir, prefix, name):
 
 
 def save_with_bg(img, target_dir, prefix, name):
-    img_resized = cv2.resize(img, (75, 75))
-    save(img_resized, target_dir, prefix, name)
+    save(img, target_dir, prefix, name)
 
 
 def transform(char, source_path, out_dir, prefix):
@@ -29,14 +29,17 @@ def transform(char, source_path, out_dir, prefix):
     if not os.path.exists(target_dir):
         os.makedirs(target_dir)
     img = cv2read(source_path)
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     # 原图
     save(img, target_dir, prefix, 'original')
     # 旋转 -30 度到 +30 度
     height, width = img.shape[:2]
     center = (width / 2, height / 2)
-    for angle in range(-30, 30, 5):
+    for angle in range(-30, 30):
         M = cv2.getRotationMatrix2D(center, angle, 1.0)
-        rotated_img = cv2.warpAffine(img, M, (width, height))
+        rotated_img = cv2.warpAffine(img, M, (width, height),
+                                     borderMode=cv2.BORDER_CONSTANT,
+                                     borderValue=(255, 255, 255))
         save_with_bg(rotated_img, target_dir, prefix, 'rotate_%d' % angle)
 
     # 梯形扭曲
@@ -47,35 +50,43 @@ def transform(char, source_path, out_dir, prefix):
                               [img.shape[1], img.shape[0]]])
         M = cv2.getPerspectiveTransform(src_pts, dst_pts)
         distorted_img = cv2.warpPerspective(img, M,
-                                            (img.shape[1], img.shape[0]))
+                                            (img.shape[1], img.shape[0]),
+                                            borderMode=cv2.BORDER_CONSTANT,
+                                            borderValue=(255, 255, 255))
         save_with_bg(distorted_img, target_dir, prefix, 'distorte_up_%d.g' % i)
 
         dst_pts = np.float32([[0, 0], [img.shape[1], 0], [i, img.shape[0]],
                               [img.shape[1] - i, img.shape[0]]])
         M = cv2.getPerspectiveTransform(src_pts, dst_pts)
         distorted_img = cv2.warpPerspective(img, M,
-                                            (img.shape[1], img.shape[0]))
+                                            (img.shape[1], img.shape[0]),
+                                            borderMode=cv2.BORDER_CONSTANT,
+                                            borderValue=(255, 255, 255))
         save_with_bg(distorted_img, target_dir, prefix, 'distorte_down_%d' % i)
 
-    for i in range(1, int(img.shape[0] * 0.3), 5):
+    for i in range(1, int(img.shape[0] * 0.3)):
         dst_pts = np.float32([[0, i], [img.shape[1], 0], [0, img.shape[0] - i],
                               [img.shape[1], img.shape[0]]])
         M = cv2.getPerspectiveTransform(src_pts, dst_pts)
         distorted_img = cv2.warpPerspective(img, M,
-                                            (img.shape[1], img.shape[0]))
+                                            (img.shape[1], img.shape[0]),
+                                            borderMode=cv2.BORDER_CONSTANT,
+                                            borderValue=(255, 255, 255))
         save_with_bg(distorted_img, target_dir, prefix, 'distorte_left_%d' % i)
 
         dst_pts = np.float32([[0, 0], [img.shape[1], i], [0, img.shape[0]],
                               [img.shape[1], img.shape[0] - i]])
         M = cv2.getPerspectiveTransform(src_pts, dst_pts)
         distorted_img = cv2.warpPerspective(img, M,
-                                            (img.shape[1], img.shape[0]))
+                                            (img.shape[1], img.shape[0]),
+                                            borderMode=cv2.BORDER_CONSTANT,
+                                            borderValue=(255, 255, 255))
         save_with_bg(distorted_img, target_dir, prefix,
                      'distorte_right_%d.png' % i)
 
 
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 4:
         print('Usage: img_transform.py <input_dir> <output_dir> <prefix>')
         return
     [img_path, out_dir, prefix] = sys.argv[1:4]
